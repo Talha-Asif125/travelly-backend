@@ -36,6 +36,7 @@ const ServiceReservationSchema = new mongoose.Schema(
       type: Number,
       default: 1,
       min: 1,
+      required: false,
     },
     
     // Contact information
@@ -49,6 +50,16 @@ const ServiceReservationSchema = new mongoose.Schema(
     },
     customerPhone: {
       type: String,
+      required: true,
+    },
+    
+    // Customer identity verification
+    cnicNumber: {
+      type: String,
+      required: true,
+    },
+    cnicPhoto: {
+      type: String, // Base64 image data
       required: true,
     },
     

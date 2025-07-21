@@ -57,8 +57,8 @@ const getToursByCategory = async (req, res) => {
     const categoryMappings = {
       'wildsafari': ['safari', 'safaries', 'wild safari', 'wildsafari'],
       'safaries': ['safari', 'safaries', 'wild safari', 'wildsafari'],
-      'hikingandtrekking': ['hiking', 'trekking', 'hiking and trekking', 'hikingandtrekking'],
-      'sunandbeach': ['beach', 'sun and beach', 'sunandbeach'],
+          'privatecarservice': ['private', 'car', 'service', 'private car service', 'privatecarservice'],
+    'citytocity': ['city', 'travel', 'city to city', 'citytocity'],
       'cultural': ['cultural', 'culture'],
       'special': ['special'],
       'festival': ['festival', 'festivals']

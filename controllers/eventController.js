@@ -1,5 +1,4 @@
 const mongoose = require('mongoose');
-const asyncHandler = require('express-async-handler');
 
 // Define a temporary event schema directly in controller
 // This can be moved to a proper model file later
@@ -51,29 +50,43 @@ const Event = mongoose.models.Event || mongoose.model('Event', eventSchema);
 // @desc    Get all events
 // @route   GET /api/events
 // @access  Public
-const getEvents = asyncHandler(async (req, res) => {
+const getEvents = async (req, res) => {
+  try {
+    console.log("Getting all events...");
   const events = await Event.find({});
+    console.log(`Found ${events.length} events`);
   res.status(200).json(events);
-});
+  } catch (error) {
+    console.error("Error getting events:", error);
+    res.status(500).json({ message: error.message });
+  }
+};
 
 // @desc    Get single event
 // @route   GET /api/events/:id
 // @access  Public
-const getEvent = asyncHandler(async (req, res) => {
+const getEvent = async (req, res) => {
+  try {
+    console.log("Getting event with ID:", req.params.id);
   const event = await Event.findById(req.params.id);
   
   if (!event) {
-    res.status(404);
-    throw new Error('Event not found');
+      return res.status(404).json({ message: 'Event not found' });
   }
   
   res.status(200).json(event);
-});
+  } catch (error) {
+    console.error("Error getting event:", error);
+    res.status(500).json({ message: error.message });
+  }
+};
 
 // @desc    Create a new event
 // @route   POST /api/events
 // @access  Private/Admin
-const createEvent = asyncHandler(async (req, res) => {
+const createEvent = async (req, res) => {
+  try {
+    console.log("Creating event with data:", req.body);
   const {
     name,
     type,
@@ -98,18 +111,22 @@ const createEvent = asyncHandler(async (req, res) => {
     image
   });
   
-  if (event) {
+    console.log("Event created:", event);
     res.status(201).json(event);
-  } else {
-    res.status(400);
-    throw new Error('Invalid event data');
+  } catch (error) {
+    console.error("Error creating event:", error);
+    res.status(500).json({ message: error.message });
   }
-});
+};
 
 // @desc    Update an event
 // @route   PUT /api/events/:id
 // @access  Private/Admin
-const updateEvent = asyncHandler(async (req, res) => {
+const updateEvent = async (req, res) => {
+  try {
+    console.log("Updating event with ID:", req.params.id);
+    console.log("Update data:", req.body);
+    
   const {
     name,
     type,
@@ -124,7 +141,10 @@ const updateEvent = asyncHandler(async (req, res) => {
   
   const event = await Event.findById(req.params.id);
   
-  if (event) {
+    if (!event) {
+      return res.status(404).json({ message: 'Event not found' });
+    }
+    
     event.name = name || event.name;
     event.type = type || event.type;
     event.date = date || event.date;
@@ -136,27 +156,34 @@ const updateEvent = asyncHandler(async (req, res) => {
     event.image = image || event.image;
     
     const updatedEvent = await event.save();
+    console.log("Event updated:", updatedEvent);
     res.status(200).json(updatedEvent);
-  } else {
-    res.status(404);
-    throw new Error('Event not found');
+  } catch (error) {
+    console.error("Error updating event:", error);
+    res.status(500).json({ message: error.message });
   }
-});
+};
 
 // @desc    Delete an event
 // @route   DELETE /api/events/:id
 // @access  Private/Admin
-const deleteEvent = asyncHandler(async (req, res) => {
+const deleteEvent = async (req, res) => {
+  try {
+    console.log("Deleting event with ID:", req.params.id);
   const event = await Event.findById(req.params.id);
   
-  if (event) {
+    if (!event) {
+      return res.status(404).json({ message: 'Event not found' });
+    }
+    
     await event.deleteOne();
+    console.log("Event deleted successfully");
     res.status(200).json({ message: 'Event removed' });
-  } else {
-    res.status(404);
-    throw new Error('Event not found');
+  } catch (error) {
+    console.error("Error deleting event:", error);
+    res.status(500).json({ message: error.message });
   }
-});
+};
 
 module.exports = {
   getEvents,

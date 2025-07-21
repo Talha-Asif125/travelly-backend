@@ -8,5 +8,8 @@ router.post("/find-resturent-by-id", restaurant.findResturentById);
 router.post("/find-resturent-by-name", restaurant.findResturentByName);
 router.post("/find-first-five-resturents", restaurant.findFirstFiveResturents);
 
+// CRUD operations
+router.delete("/:id", restaurant.deleteResturent);
+router.put("/:id", restaurant.updateResturent);
 
 module.exports = router;

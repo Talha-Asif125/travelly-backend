@@ -22,18 +22,22 @@ const NotificationSchema = new mongoose.Schema(
       type: String,
       required: true,
       enum: [
+        'provider_request_submitted',
         'provider_request_approved',
         'provider_request_rejected',
         'new_reservation',
         'reservation_approved',
         'reservation_rejected',
+        'reservation_cancelled',
         'service_added',
         'service_updated',
         'payment_confirmed',
         'system_maintenance',
         'new_service_booking',
         'booking_confirmed',
-        'booking_cancelled'
+        'booking_cancelled',
+        'booking_updated',
+        'booking_deleted'
       ]
     },
     

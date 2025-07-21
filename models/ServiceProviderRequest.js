@@ -9,7 +9,7 @@ const ServiceProviderRequestSchema = new mongoose.Schema(
       required: true,
     },
     
-    // Personal Details
+    // Personal Details & Identity (common for all)
     firstName: {
       type: String,
       required: true,
@@ -18,84 +18,13 @@ const ServiceProviderRequestSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
-    email: {
+    cnic: {
       type: String,
-      required: function() {
-        return this.providerType !== 'vehicle';
-      }
+      required: true,
     },
-    phone: {
+    mobileForOTP: {
       type: String,
-      required: function() {
-        return this.providerType !== 'vehicle';
-      }
-    },
-    
-    // Business Details - only required for non-vehicle providers
-    businessName: {
-      type: String,
-      required: function() {
-        return this.providerType !== 'vehicle';
-      }
-    },
-    businessAddress: {
-      type: String,
-      required: function() {
-        return this.providerType !== 'vehicle';
-      }
-    },
-    businessCity: {
-      type: String,
-      required: function() {
-        return this.providerType !== 'vehicle';
-      }
-    },
-    businessState: {
-      type: String,
-      required: function() {
-        return this.providerType !== 'vehicle';
-      }
-    },
-    businessZip: {
-      type: String,
-      required: function() {
-        return this.providerType !== 'vehicle';
-      }
-    },
-    businessPhone: {
-      type: String,
-      required: function() {
-        return this.providerType !== 'vehicle';
-      }
-    },
-    businessEmail: {
-      type: String,
-      required: function() {
-        return this.providerType !== 'vehicle';
-      }
-    },
-    businessWebsite: {
-      type: String,
-    },
-    
-    // Documentation - only required for non-vehicle providers
-    registrationNumber: {
-      type: String,
-      required: function() {
-        return this.providerType !== 'vehicle';
-      }
-    },
-    licenseNumber: {
-      type: String,
-      required: function() {
-        return this.providerType !== 'vehicle';
-      }
-    },
-    taxId: {
-      type: String,
-      required: function() {
-        return this.providerType !== 'vehicle';
-      }
+      required: true,
     },
     
     // Service Details
@@ -104,141 +33,153 @@ const ServiceProviderRequestSchema = new mongoose.Schema(
       required: true,
       enum: ['hotel', 'vehicle', 'tour', 'restaurant', 'event'],
     },
-    serviceDetails: {
+
+    // Hotel-specific fields (only for hotel providers)
+    hotelName: {
       type: String,
-      required: function() {
-        return this.providerType !== 'vehicle';
-      }
+      required: function() { return this.providerType === 'hotel'; }
     },
-    experience: {
+    hotelAddress: {
+      type: String,
+      required: function() { return this.providerType === 'hotel'; }
+    },
+    propertyType: {
+      type: String,
+      required: function() { return this.providerType === 'hotel'; }
+    },
+    numberOfRooms: {
       type: Number,
-      required: function() {
-        return this.providerType !== 'vehicle';
-      }
+      required: function() { return this.providerType === 'hotel'; }
     },
-    additionalInfo: {
+    starRating: {
+      type: Number,
+      required: function() { return this.providerType === 'hotel'; }
+    },
+    priceRangeMin: {
+      type: Number,
+      required: function() { return this.providerType === 'hotel'; }
+    },
+    priceRangeMax: {
+      type: Number,
+      required: function() { return this.providerType === 'hotel'; }
+    },
+    hotelPhone: {
       type: String,
+      required: function() { return this.providerType === 'hotel'; }
+    },
+    hotelEmail: {
+      type: String,
+      required: function() { return this.providerType === 'hotel'; }
+    },
+    amenities: {
+      type: [String],
+      default: []
+    },
+
+    // Restaurant-specific fields (only for restaurant providers)
+    restaurantName: {
+      type: String,
+      required: function() { return this.providerType === 'restaurant'; }
+    },
+    restaurantAddress: {
+      type: String,
+      required: function() { return this.providerType === 'restaurant'; }
+    },
+    cuisineType: {
+      type: String,
+      required: function() { return this.providerType === 'restaurant'; }
+    },
+    seatingCapacity: {
+      type: Number,
+      required: function() { return this.providerType === 'restaurant'; }
+    },
+    restaurantPhone: {
+      type: String,
+      required: function() { return this.providerType === 'restaurant'; }
+    },
+    restaurantEmail: {
+      type: String,
+      required: function() { return this.providerType === 'restaurant'; }
+    },
+
+    // Event-specific fields (only for event providers)
+    eventName: {
+      type: String,
+      required: function() { return this.providerType === 'event'; }
+    },
+    eventAddress: {
+      type: String,
+      required: function() { return this.providerType === 'event'; }
+    },
+    eventPhone: {
+      type: String,
+      required: function() { return this.providerType === 'event'; }
+    },
+    eventEmail: {
+      type: String,
+      required: function() { return this.providerType === 'event'; }
     },
 
     // Vehicle-specific fields (only for vehicle providers)
-    vehicleDetails: {
-      vehicleType: {
+    shopName: {
+      type: String,
+      required: function() { return this.providerType === 'vehicle'; }
+    },
+    shopCity: {
+      type: String,
+      required: function() { return this.providerType === 'vehicle'; }
+    },
+    shopAddress: {
+      type: String,
+      required: function() { return this.providerType === 'vehicle'; }
+    },
+    fleetSize: {
+      type: Number,
+      required: function() { return this.providerType === 'vehicle'; }
+    },
+    shopPhone: {
+      type: String,
+      required: function() { return this.providerType === 'vehicle'; }
+    },
+    shopDescription: {
+      type: String,
+      required: function() { return this.providerType === 'vehicle'; }
+    },
+
+    // Document uploads (structure matches frontend)
+    documents: {
+      // Common for all providers
+      cnicCopy: {
         type: String,
-        required: function() {
-          return this.providerType === 'vehicle';
-        }
+        required: true
       },
-      make: {
+      // Hotel: licensePhoto
+      licensePhoto: {
         type: String,
-        required: function() {
-          return this.providerType === 'vehicle';
-        }
+        required: function() { return this.providerType === 'hotel' || this.providerType === 'tour'; }
       },
-      model: {
-        type: String,
-        required: function() {
-          return this.providerType === 'vehicle';
-        }
+      // Restaurant: restaurantPhotos (multiple)
+      restaurantPhotos: {
+        type: [String],
+        default: [],
+        required: function() { return this.providerType === 'restaurant'; }
       },
-      year: {
-        type: Number,
-        required: function() {
-          return this.providerType === 'vehicle';
-        }
+      // Event: eventPhotos (multiple)
+      eventPhotos: {
+        type: [String],
+        default: [],
+        required: function() { return this.providerType === 'event'; }
       },
-      color: {
-        type: String,
-        required: function() {
-          return this.providerType === 'vehicle';
-        }
-      },
-      registrationNumber: {
-        type: String,
-        required: function() {
-          return this.providerType === 'vehicle';
-        }
-      },
-      fuelType: {
-        type: String,
-        required: function() {
-          return this.providerType === 'vehicle';
-        }
-      },
-      transmission: {
-        type: String,
-        required: function() {
-          return this.providerType === 'vehicle';
-        }
-      },
-      capacity: {
-        type: Number,
-        required: function() {
-          return this.providerType === 'vehicle';
-        }
-      },
-      pricePerDay: {
-        type: Number,
-        required: function() {
-          return this.providerType === 'vehicle';
-        }
-      },
-      features: {
-        type: String,
-        required: function() {
-          return this.providerType === 'vehicle';
-        }
-      },
-      description: {
-        type: String,
-        required: function() {
-          return this.providerType === 'vehicle';
-        }
+      // Vehicle: vehiclePhotos (multiple)
+      vehiclePhotos: {
+        type: [String],
+        default: [],
+        required: function() { return this.providerType === 'vehicle'; }
       }
     },
 
-    // Document uploads
-    documents: {
-      profilePicture: String,
-      cnicFront: String,
-      cnicBack: String,
-      // Business documents (only for non-vehicle providers)
-      businessLicense: {
-        type: String,
-        required: function() {
-          return this.providerType !== 'vehicle';
-        }
-      },
-      taxCertificate: {
-        type: String,
-        required: function() {
-          return this.providerType !== 'vehicle';
-        }
-      },
-      // Vehicle documents (only for vehicle providers)
-      vehicleRegistration: {
-        type: String,
-        required: function() {
-          return this.providerType === 'vehicle';
-        }
-      },
-      drivingLicense: {
-        type: String,
-        required: function() {
-          return this.providerType === 'vehicle';
-        }
-      },
-      vehicleInsurance: {
-        type: String,
-        required: function() {
-          return this.providerType === 'vehicle';
-        }
-      },
-      vehicleImages: {
-        type: [String],
-        required: function() {
-          return this.providerType === 'vehicle';
-        }
-      }
+    additionalInfo: {
+      type: String,
     },
     
     // Status and Review

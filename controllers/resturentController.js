@@ -54,9 +54,62 @@ const findFirstFiveResturents = async (req, res, next) => {
     }
 };
 
+const deleteResturent = async (req, res, next) => {
+    try {
+        console.log("Deleting restaurant with ID:", req.params.id);
+        const deletedResturent = await Resturent.findByIdAndDelete(req.params.id);
+        
+        if (!deletedResturent) {
+            return res.status(404).json({ 
+                success: false, 
+                message: "Restaurant not found" 
+            });
+        }
+        
+        res.status(200).json({ 
+            success: true, 
+            message: "Restaurant deleted successfully" 
+        });
+    } catch (err) {
+        console.error("Error deleting restaurant:", err);
+        next(err);
+    }
+};
+
+const updateResturent = async (req, res, next) => {
+    try {
+        console.log("Updating restaurant with ID:", req.params.id);
+        console.log("Update data:", req.body);
+        
+        const updatedResturent = await Resturent.findByIdAndUpdate(
+            req.params.id, 
+            req.body, 
+            { new: true, runValidators: true }
+        );
+        
+        if (!updatedResturent) {
+            return res.status(404).json({ 
+                success: false, 
+                message: "Restaurant not found" 
+            });
+        }
+        
+        res.status(200).json({ 
+            success: true, 
+            data: updatedResturent,
+            message: "Restaurant updated successfully" 
+        });
+    } catch (err) {
+        console.error("Error updating restaurant:", err);
+        next(err);
+    }
+};
+
 module.exports = {
     createResturent,
     findResturentByName,
     findFirstFiveResturents,
-    findResturentById
+    findResturentById,
+    deleteResturent,
+    updateResturent
 };

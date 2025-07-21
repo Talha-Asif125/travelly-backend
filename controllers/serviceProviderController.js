@@ -1,5 +1,6 @@
 const ServiceProviderRequest = require("../models/ServiceProviderRequest");
 const User = require("../models/userModel");
+const { createNotificationHelper } = require("./notificationController");
 
 // Enhanced validation function
 const validateProviderRequest = (data) => {
@@ -7,23 +8,7 @@ const validateProviderRequest = (data) => {
   const {
     firstName,
     lastName,
-    email,
-    phone,
-    businessName,
-    businessAddress,
-    businessCity,
-    businessState,
-    businessZip,
-    businessPhone,
-    businessEmail,
-    businessWebsite,
-    registrationNumber,
-    licenseNumber,
-    taxId,
-    providerType,
-    serviceDetails,
-    experience,
-    vehicleDetails
+    providerType
   } = data;
 
   // Personal Information Validation
@@ -40,238 +25,149 @@ const validateProviderRequest = (data) => {
     errors.providerType = "Service provider type is required";
   }
 
-  // Tour business validation
+  // Debug: Show which provider type we're validating
+  console.log('=== VALIDATION DEBUG ===');
+  console.log('Validating provider type:', providerType);
+  console.log('Provider type typeof:', typeof providerType);
+  console.log('Provider type === "tour":', providerType === 'tour');
+  console.log('Provider type === "vehicle":', providerType === 'vehicle'); 
+  console.log('Provider type === "hotel":', providerType === 'hotel');
+  console.log('Provider type === "restaurant":', providerType === 'restaurant');
+  console.log('Provider type === "event":', providerType === 'event');
+
+  // Tour business validation (simplified - only identity + documents)
   if (providerType === 'tour') {
-    // For tour providers, validate tour business details instead of business details
-    if (!req.body.tourCompanyName || !req.body.tourCompanyName.trim()) {
-      errors.tourCompanyName = "Tour company name is required";
-    }
-    
-    if (!req.body.yearsOfExperience || isNaN(req.body.yearsOfExperience) || parseInt(req.body.yearsOfExperience) < 0) {
-      errors.yearsOfExperience = "Valid years of experience is required";
-    }
-    
-    if (!req.body.serviceAreas || !req.body.serviceAreas.trim()) {
-      errors.serviceAreas = "Service areas are required";
-    }
-    
-    if (!req.body.tourSpecializations || !req.body.tourSpecializations.trim()) {
-      errors.tourSpecializations = "Tour specializations are required";
-    }
-    
-    if (!req.body.tourBusinessDescription || !req.body.tourBusinessDescription.trim()) {
-      errors.tourBusinessDescription = "Business description is required";
-    }
+    // Tour operators have simplified registration - no additional business details required
+    console.log('✅ VALIDATION: Taking TOUR branch');
   } else if (providerType === 'vehicle') {
+    console.log('✅ VALIDATION: Taking VEHICLE branch');
     // For vehicle providers, validate rental shop details
-    if (!req.body.shopName || !req.body.shopName.trim()) {
+    if (!data.shopName || !data.shopName.trim()) {
       errors.shopName = "Rental shop name is required";
     }
     
-    if (!req.body.shopCity || !req.body.shopCity.trim()) {
+    if (!data.shopCity || !data.shopCity.trim()) {
       errors.shopCity = "Shop city is required";
     }
     
-    if (!req.body.shopAddress || !req.body.shopAddress.trim()) {
+    if (!data.shopAddress || !data.shopAddress.trim()) {
       errors.shopAddress = "Shop address is required";
     }
     
-    if (!req.body.fleetSize || isNaN(req.body.fleetSize) || parseInt(req.body.fleetSize) <= 0) {
+    if (!data.fleetSize || isNaN(data.fleetSize) || parseInt(data.fleetSize) <= 0) {
       errors.fleetSize = "Valid fleet size is required";
     }
     
-    if (!req.body.yearsInBusiness || isNaN(req.body.yearsInBusiness) || parseInt(req.body.yearsInBusiness) < 0) {
-      errors.yearsInBusiness = "Valid years in business is required";
-    }
-    
-    if (!req.body.vehicleTypesAvailable || !req.body.vehicleTypesAvailable.trim()) {
-      errors.vehicleTypesAvailable = "Vehicle types available is required";
-    }
-    
-    if (!req.body.shopPhone || !req.body.shopPhone.trim()) {
+    if (!data.shopPhone || !data.shopPhone.trim()) {
       errors.shopPhone = "Shop contact phone is required";
-    } else if (!/^[0-9]{10,11}$/.test(req.body.shopPhone.replace(/\D/g, ''))) {
+    } else if (!/^[0-9]{10,11}$/.test(data.shopPhone.replace(/\D/g, ''))) {
       errors.shopPhone = "Please enter a valid 10-11 digit shop phone number";
     }
     
-    if (!req.body.shopDescription || !req.body.shopDescription.trim()) {
+    if (!data.shopDescription || !data.shopDescription.trim()) {
       errors.shopDescription = "Shop description is required";
     }
   } else if (providerType === 'hotel') {
+    console.log('✅ VALIDATION: Taking HOTEL branch');
     // For hotels, validate hotel-specific details instead of business details
-    if (!req.body.hotelName || !req.body.hotelName.trim()) {
+    if (!data.hotelName || !data.hotelName.trim()) {
       errors.hotelName = "Hotel name is required";
     }
     
-    if (!req.body.hotelAddress || !req.body.hotelAddress.trim()) {
+    if (!data.hotelAddress || !data.hotelAddress.trim()) {
       errors.hotelAddress = "Hotel address is required";
     }
     
-    if (!req.body.propertyType || !req.body.propertyType.trim()) {
+    if (!data.propertyType || !data.propertyType.trim()) {
       errors.propertyType = "Property type is required";
     }
     
-    if (!req.body.numberOfRooms || isNaN(req.body.numberOfRooms) || parseInt(req.body.numberOfRooms) <= 0) {
+    if (!data.numberOfRooms || isNaN(data.numberOfRooms) || parseInt(data.numberOfRooms) <= 0) {
       errors.numberOfRooms = "Valid number of rooms is required";
     }
     
-    if (!req.body.starRating || isNaN(req.body.starRating) || parseInt(req.body.starRating) < 1 || parseInt(req.body.starRating) > 5) {
+    if (!data.starRating || isNaN(data.starRating) || parseInt(data.starRating) < 1 || parseInt(data.starRating) > 5) {
       errors.starRating = "Star rating must be between 1 and 5";
     }
     
-    if (!req.body.priceRangeMin || isNaN(req.body.priceRangeMin) || parseFloat(req.body.priceRangeMin) <= 0) {
+    if (!data.priceRangeMin || isNaN(data.priceRangeMin) || parseFloat(data.priceRangeMin) <= 0) {
       errors.priceRangeMin = "Valid minimum price is required";
     }
     
-    if (!req.body.priceRangeMax || isNaN(req.body.priceRangeMax) || parseFloat(req.body.priceRangeMax) <= 0) {
+    if (!data.priceRangeMax || isNaN(data.priceRangeMax) || parseFloat(data.priceRangeMax) <= 0) {
       errors.priceRangeMax = "Valid maximum price is required";
     }
     
-    if (!req.body.hotelPhone || !req.body.hotelPhone.trim()) {
+    if (!data.hotelPhone || !data.hotelPhone.trim()) {
       errors.hotelPhone = "Hotel contact phone is required";
-    } else if (!/^[0-9]{10,11}$/.test(req.body.hotelPhone.replace(/\D/g, ''))) {
+    } else if (!/^[0-9]{10,11}$/.test(data.hotelPhone.replace(/\D/g, ''))) {
       errors.hotelPhone = "Please enter a valid 10-11 digit hotel phone number";
     }
     
-    if (!req.body.hotelEmail || !req.body.hotelEmail.trim()) {
+    if (!data.hotelEmail || !data.hotelEmail.trim()) {
       errors.hotelEmail = "Hotel contact email is required";
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(req.body.hotelEmail)) {
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.hotelEmail)) {
       errors.hotelEmail = "Please enter a valid hotel email address";
     }
   } else if (providerType === 'restaurant') {
+    console.log('✅ VALIDATION: Taking RESTAURANT branch');
     // For restaurant providers, include restaurant details instead of business details
-    if (!req.body.restaurantName || !req.body.restaurantName.trim()) {
+    if (!data.restaurantName || !data.restaurantName.trim()) {
       errors.restaurantName = "Restaurant name is required";
     }
     
-    if (!req.body.restaurantAddress || !req.body.restaurantAddress.trim()) {
+    if (!data.restaurantAddress || !data.restaurantAddress.trim()) {
       errors.restaurantAddress = "Restaurant address is required";
     }
     
-    if (!req.body.cuisineType || !req.body.cuisineType.trim()) {
+    if (!data.cuisineType || !data.cuisineType.trim()) {
       errors.cuisineType = "Cuisine type is required";
     }
     
-    if (!req.body.seatingCapacity || isNaN(req.body.seatingCapacity) || parseInt(req.body.seatingCapacity) <= 0) {
+    if (!data.seatingCapacity || isNaN(data.seatingCapacity) || parseInt(data.seatingCapacity) <= 0) {
       errors.seatingCapacity = "Valid seating capacity is required";
     }
     
-    if (!req.body.restaurantPhone || !req.body.restaurantPhone.trim()) {
+    if (!data.restaurantPhone || !data.restaurantPhone.trim()) {
       errors.restaurantPhone = "Restaurant contact phone is required";
-    } else if (!/^[0-9]{10,11}$/.test(req.body.restaurantPhone.replace(/\D/g, ''))) {
+    } else if (!/^[0-9]{10,11}$/.test(data.restaurantPhone.replace(/\D/g, ''))) {
       errors.restaurantPhone = "Please enter a valid 10-11 digit restaurant phone number";
     }
     
-    if (!req.body.restaurantEmail || !req.body.restaurantEmail.trim()) {
+    if (!data.restaurantEmail || !data.restaurantEmail.trim()) {
       errors.restaurantEmail = "Restaurant contact email is required";
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(req.body.restaurantEmail)) {
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.restaurantEmail)) {
       errors.restaurantEmail = "Please enter a valid restaurant email address";
     }
   } else if (providerType === 'event') {
+    console.log('✅ VALIDATION: Taking EVENT branch');
     // For event providers, include event details instead of business details
-    if (!req.body.eventName || !req.body.eventName.trim()) {
+    if (!data.eventName || !data.eventName.trim()) {
       errors.eventName = "Event name is required";
     }
     
-    if (!req.body.eventAddress || !req.body.eventAddress.trim()) {
+    if (!data.eventAddress || !data.eventAddress.trim()) {
       errors.eventAddress = "Event address is required";
     }
     
-    if (!req.body.eventPhone || !req.body.eventPhone.trim()) {
+    if (!data.eventPhone || !data.eventPhone.trim()) {
       errors.eventPhone = "Event contact phone is required";
-    } else if (!/^[0-9]{10,11}$/.test(req.body.eventPhone.replace(/\D/g, ''))) {
+    } else if (!/^[0-9]{10,11}$/.test(data.eventPhone.replace(/\D/g, ''))) {
       errors.eventPhone = "Please enter a valid 10-11 digit event phone number";
     }
     
-    if (!req.body.eventEmail || !req.body.eventEmail.trim()) {
+    if (!data.eventEmail || !data.eventEmail.trim()) {
       errors.eventEmail = "Event contact email is required";
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(req.body.eventEmail)) {
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.eventEmail)) {
       errors.eventEmail = "Please enter a valid event email address";
     }
   } else {
-    // Non-vehicle provider validation (business details)
-    if (!email || !email.trim()) {
-      errors.email = "Email address is required";
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      errors.email = "Please enter a valid email address";
-    }
-
-    if (!phone || !phone.trim()) {
-      errors.phone = "Phone number is required";
-    } else if (!/^[0-9]{10,11}$/.test(phone.replace(/\D/g, ''))) {
-      errors.phone = "Please enter a valid 10-11 digit phone number";
-    }
-
-    // Business Information Validation
-    if (!businessName || !businessName.trim()) {
-      errors.businessName = "Business name is required";
-    }
-
-    if (!businessAddress || !businessAddress.trim()) {
-      errors.businessAddress = "Business address is required";
-    }
-
-    if (!businessCity || !businessCity.trim()) {
-      errors.businessCity = "Business city is required";
-    }
-
-    if (!businessState || !businessState.trim()) {
-      errors.businessState = "Business state is required";
-    }
-
-    if (!businessZip || !businessZip.trim()) {
-      errors.businessZip = "ZIP code is required";
-    } else if (!/^[0-9]{5}(-[0-9]{4})?$/.test(businessZip)) {
-      errors.businessZip = "Please enter a valid ZIP code";
-    }
-
-    if (!businessPhone || !businessPhone.trim()) {
-      errors.businessPhone = "Business phone number is required";
-    } else if (!/^[0-9]{10,11}$/.test(businessPhone.replace(/\D/g, ''))) {
-      errors.businessPhone = "Please enter a valid 10-11 digit business phone number";
-    }
-
-    if (!businessEmail || !businessEmail.trim()) {
-      errors.businessEmail = "Business email is required";
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(businessEmail)) {
-      errors.businessEmail = "Please enter a valid business email address";
-    }
-
-    // Business website is optional, but if provided, validate format
-    if (businessWebsite && businessWebsite.trim() && !/^https?:\/\/.+\..+/.test(businessWebsite)) {
-      errors.businessWebsite = "Please enter a valid website URL";
-    }
-
-    // Documentation Validation
-    if (!registrationNumber || !registrationNumber.trim()) {
-      errors.registrationNumber = "Business registration number is required";
-    } else if (registrationNumber.length < 5) {
-      errors.registrationNumber = "Please enter a valid business registration number";
-    }
-
-    if (!licenseNumber || !licenseNumber.trim()) {
-      errors.licenseNumber = "License number is required";
-    } else if (licenseNumber.length < 3) {
-      errors.licenseNumber = "Please enter a valid license number";
-    }
-
-    if (!taxId || !taxId.trim()) {
-      errors.taxId = "Tax ID is required";
-    } else if (!/^[A-Z0-9\-]{3,20}$/.test(taxId)) {
-      errors.taxId = "Please enter a valid tax ID (alphanumeric, 3-20 characters)";
-    }
-
-    if (!serviceDetails || !serviceDetails.trim()) {
-      errors.serviceDetails = "Service details are required";
-    }
-
-    if (!experience) {
-      errors.experience = "Years of experience is required";
-    } else if (isNaN(experience) || parseFloat(experience) < 0) {
-      errors.experience = "Please enter a valid number of years of experience";
-    }
+    console.log('❌ VALIDATION: No matching provider type branch found!');
+    console.log('Provider type value:', JSON.stringify(providerType));
   }
+  // All provider types now use simplified registration - no traditional business validation needed
 
+  console.log('=== END VALIDATION DEBUG ===');
   return {
     isValid: Object.keys(errors).length === 0,
     errors
@@ -288,22 +184,7 @@ const submitProviderRequest = async (req, res) => {
     const {
       firstName,
       lastName,
-      email,
-      phone,
-      businessName,
-      businessAddress,
-      businessCity,
-      businessState,
-      businessZip,
-      businessPhone,
-      businessEmail,
-      businessWebsite,
-      registrationNumber,
-      licenseNumber,
-      taxId,
       providerType,
-      serviceDetails,
-      experience,
       additionalInfo,
       vehicleDetails,
       documents,
@@ -312,6 +193,18 @@ const submitProviderRequest = async (req, res) => {
 
     // Enhanced validation with specific field errors
     console.log('Starting validation...');
+    console.log('Provider type from body:', providerType);
+    console.log('All req.body keys:', Object.keys(req.body));
+    console.log('Calling validateProviderRequest with:', {
+      firstName,
+      lastName, 
+      providerType,
+      sampleFields: {
+        hotelName: req.body.hotelName,
+        shopName: req.body.shopName,
+        restaurantName: req.body.restaurantName
+      }
+    });
     const validation = validateProviderRequest(req.body);
     console.log('Validation result:', validation);
     
@@ -329,19 +222,37 @@ const submitProviderRequest = async (req, res) => {
     }
 
     console.log('Validation passed, checking existing requests...');
+    
+    // First, let's see ALL requests for this user and provider type for debugging
+    const allUserRequests = await ServiceProviderRequest.find({
+      userId: req.user.id,
+      providerType: providerType
+    }).sort({ submittedAt: -1 });
+    
+    console.log(`Found ${allUserRequests.length} total requests for user ${req.user.id} and provider type ${providerType}:`);
+    allUserRequests.forEach((request, index) => {
+      console.log(`  Request ${index + 1}: Status = ${request.status}, Date = ${request.submittedAt}`);
+    });
+    
     // Check if user already has a pending or approved request for this specific provider type
+    // Note: Users can reapply if their previous request was rejected
     const existingRequest = await ServiceProviderRequest.findOne({
       userId: req.user.id,
       providerType: providerType,
       status: { $in: ['pending', 'approved'] }
     });
 
-    console.log('Existing request check for provider type:', existingRequest);
+    console.log('Existing blocking request:', existingRequest);
     if (existingRequest) {
       console.log(`User already has a ${existingRequest.status} request for ${providerType}`);
       return res.status(400).json({
         success: false,
-        message: `You already have a ${existingRequest.status} service provider request for ${providerType}. You can apply for other service types separately.`
+        message: `You already have a ${existingRequest.status} service provider request for ${providerType}. You can apply for other service types separately.`,
+        debug: {
+          existingStatus: existingRequest.status,
+          existingDate: existingRequest.submittedAt,
+          allRequests: allUserRequests.map(r => ({ status: r.status, date: r.submittedAt }))
+        }
       });
     }
 
@@ -352,6 +263,8 @@ const submitProviderRequest = async (req, res) => {
       userId: req.user.id,
       firstName,
       lastName,
+      cnic: req.body.cnic,
+      mobileForOTP: req.body.mobileForOTP,
       providerType,
       additionalInfo,
       status: 'pending'
@@ -359,31 +272,24 @@ const submitProviderRequest = async (req, res) => {
 
     // Add provider-type specific fields
     if (providerType === 'tour') {
-      // For tour providers, include tour business details instead of business details
-      requestData.tourCompanyName = req.body.tourCompanyName;
-      requestData.yearsOfExperience = req.body.yearsOfExperience;
-      requestData.serviceAreas = req.body.serviceAreas;
-      requestData.tourSpecializations = req.body.tourSpecializations;
-      requestData.tourBusinessDescription = req.body.tourBusinessDescription;
+      // For tour providers, simplified registration - only documents required
       if (documents) {
         requestData.documents = {
-          cnicCopy: documents.cnicFront || documents.cnicCopy,
+          cnicCopy: documents.cnicCopy,
           licensePhoto: documents.licensePhoto
         };
       }
     } else if (providerType === 'vehicle') {
-      // For vehicle providers, include rental shop details instead of business details
+      // For vehicle providers, include rental shop details
       requestData.shopName = req.body.shopName;
       requestData.shopCity = req.body.shopCity;
       requestData.shopAddress = req.body.shopAddress;
       requestData.fleetSize = req.body.fleetSize;
-      requestData.yearsInBusiness = req.body.yearsInBusiness;
-      requestData.vehicleTypesAvailable = req.body.vehicleTypesAvailable;
       requestData.shopPhone = req.body.shopPhone;
       requestData.shopDescription = req.body.shopDescription;
       if (documents) {
         requestData.documents = {
-          cnicCopy: documents.cnicFront || documents.cnicCopy,
+          cnicCopy: documents.cnicCopy,
           vehiclePhotos: documents.vehiclePhotos
         };
       }
@@ -401,12 +307,12 @@ const submitProviderRequest = async (req, res) => {
       requestData.amenities = req.body.amenities;
       if (documents) {
         requestData.documents = {
-          cnicCopy: documents.cnicFront || documents.cnicCopy,
+          cnicCopy: documents.cnicCopy,
           licensePhoto: documents.licensePhoto
         };
       }
     } else if (providerType === 'restaurant') {
-      // For restaurant providers, include restaurant details instead of business details
+      // For restaurant providers, include restaurant details
       requestData.restaurantName = req.body.restaurantName;
       requestData.restaurantAddress = req.body.restaurantAddress;
       requestData.cuisineType = req.body.cuisineType;
@@ -415,43 +321,24 @@ const submitProviderRequest = async (req, res) => {
       requestData.restaurantEmail = req.body.restaurantEmail;
       if (documents) {
         requestData.documents = {
-          cnicCopy: documents.cnicFront || documents.cnicCopy,
+          cnicCopy: documents.cnicCopy,
           restaurantPhotos: documents.restaurantPhotos
         };
       }
     } else if (providerType === 'event') {
-      // For event providers, include event details instead of business details
+      // For event providers, include event details
       requestData.eventName = req.body.eventName;
       requestData.eventAddress = req.body.eventAddress;
       requestData.eventPhone = req.body.eventPhone;
       requestData.eventEmail = req.body.eventEmail;
       if (documents) {
         requestData.documents = {
-          cnicCopy: documents.cnicFront || documents.cnicCopy,
+          cnicCopy: documents.cnicCopy,
           eventPhotos: documents.eventPhotos
         };
       }
-    } else {
-      // For other non-vehicle providers, add full business details
-      requestData.email = email;
-      requestData.phone = phone;
-      requestData.businessName = businessName;
-      requestData.businessAddress = businessAddress;
-      requestData.businessCity = businessCity;
-      requestData.businessState = businessState;
-      requestData.businessZip = businessZip;
-      requestData.businessPhone = businessPhone;
-      requestData.businessEmail = businessEmail;
-      requestData.businessWebsite = businessWebsite;
-      requestData.registrationNumber = registrationNumber;
-      requestData.licenseNumber = licenseNumber;
-      requestData.taxId = taxId;
-      requestData.serviceDetails = serviceDetails;
-      requestData.experience = experience;
-      if (documents) {
-        requestData.documents = documents;
-      }
     }
+    // Note: hotel, restaurant, event, vehicle, and tour providers use simplified registration
 
     // Create new service provider request
     const newRequest = new ServiceProviderRequest(requestData);
@@ -462,6 +349,23 @@ const submitProviderRequest = async (req, res) => {
     const savedRequest = await newRequest.save();
     console.log('Successfully saved to database!');
     console.log('Saved request:', savedRequest);
+
+    // Send notification to user about successful submission
+    try {
+      await createNotificationHelper(
+        req.user.id,
+        'Service Provider Request Submitted',
+        `Your request to become a ${selectedType} service provider has been submitted successfully! Our admin team will review your application and notify you of the decision within 2-3 business days.`,
+        'provider_request_submitted',
+        {
+          providerType: selectedType,
+          requestId: savedRequest._id,
+          submittedAt: new Date()
+        }
+      );
+    } catch (notifError) {
+      console.error('Error sending submission notification:', notifError);
+    }
 
     res.status(201).json({
       success: true,
@@ -587,6 +491,24 @@ const approveProviderRequest = async (req, res) => {
     
     await user.save();
 
+    // Send notification to user about approval
+    try {
+      await createNotificationHelper(
+        request.userId,
+        'Service Provider Request Approved!',
+        `Congratulations! Your request to become a ${request.providerType} service provider has been approved. You can now access your service provider dashboard and start adding your services.`,
+        'provider_request_approved',
+        {
+          providerType: request.providerType,
+          requestId: request._id,
+          approvedBy: adminId,
+          approvedAt: new Date()
+        }
+      );
+    } catch (notifError) {
+      console.error('Error sending approval notification:', notifError);
+    }
+
     res.status(200).json({
       success: true,
       message: "Service provider request approved successfully",
@@ -640,6 +562,25 @@ const rejectProviderRequest = async (req, res) => {
     request.reviewedAt = new Date();
 
     await request.save();
+
+    // Send notification to user about rejection
+    try {
+      await createNotificationHelper(
+        request.userId,
+        'Service Provider Request Update',
+        `Your request to become a ${request.providerType} service provider has been declined. Reason: ${reason}. You can submit a new application after addressing the mentioned concerns.`,
+        'provider_request_rejected',
+        {
+          providerType: request.providerType,
+          requestId: request._id,
+          reason: reason,
+          rejectedBy: adminId,
+          rejectedAt: new Date()
+        }
+      );
+    } catch (notifError) {
+      console.error('Error sending rejection notification:', notifError);
+    }
 
     res.status(200).json({
       success: true,

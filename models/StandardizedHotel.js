@@ -80,7 +80,7 @@ const HotelSchema = BaseModel.createSchema({
     currency: {
       type: String,
       default: 'LKR',
-      enum: ['LKR', 'USD', 'EUR']
+      enum: ['LKR', 'PKR', 'EUR']
     }
   },
   

@@ -30,16 +30,21 @@ const createReservation = async (req, res, next) => {
 
 const getRerservationRequests = async (req, res, next) => {
     const id = req.body.user;
-    const reservation = await ResturentReservation.find({ status: 'PENDING' }).populate({
-        path: 'resturent',
-        populate: {
-            path: 'returentType',
-        },
-        match: { user: id },
-    }).populate('user').populate('time');
+    
     try {
-        if (reservation.length != 0) {
-            return res.status(200).json(reservation);
+        const reservation = await ResturentReservation.find({ status: 'PENDING' })
+            .populate({
+                path: 'resturent',
+                match: { user: id },
+            })
+            .populate('user')
+            .populate('time');
+        
+        // Filter out reservations where resturent is null (doesn't belong to this user)
+        const filteredReservations = reservation.filter(r => r.resturent !== null);
+        
+        if (filteredReservations.length > 0) {
+            return res.status(200).json(filteredReservations);
         }
         return res.status(200).json({ error: true, message: "No Reservations Found!" });
     } catch (err) {
@@ -154,3 +159,4 @@ module.exports = {
     getRerservationRequestsByUser,
     getRerservationRequestById,
 };
+

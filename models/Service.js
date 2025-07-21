@@ -197,18 +197,43 @@ const ServiceSchema = new mongoose.Schema(
     roomType: String,
     availableRooms: Number,
     
+    // Simplified hotel fields
+    starRating: Number,
+    totalRooms: Number,
+    checkInTime: String,
+    checkOutTime: String,
+    facilities: String,
+    
     // Tour specific fields
     duration: String,
     maxGroupSize: Number,
+    tourDate: Date,       // Specific tour date for scheduled tours
+    departureTime: String, // Tour departure time (e.g., "09:00", "14:30")
+    category: String,     // Tour/Travel category (e.g., "Sun and Beach", "City Travel")
+    fromLocation: String, // Starting point for travel services
+    toLocation: String,   // Destination point for travel services
+    availableSeats: Number, // Available seats for travel services
     
     // Vehicle specific fields
     vehicleType: String,
-    capacity: Number,
+    vehicleBrand: String,     // Vehicle make/brand (e.g., Toyota, Honda)
+    vehicleModel: String,     // Vehicle model (e.g., Corolla, Civic)
+    vehicleYear: Number,      // Manufacturing year
+    vehicleNumber: String,    // Registration/license plate number
+    capacity: Number,         // Legacy field - maps to seatingCapacity
+    seatingCapacity: Number,  // Number of seats/passengers
     features: String,
     
     // Restaurant specific fields
     cuisineType: String,
     specialties: String,
+    seatingCapacity: Number,
+    totalTables: Number,
+    maxTableSize: Number,
+    operatingHours: {
+      opening: String,
+      closing: String
+    },
     
     // Flight specific fields
     aircraftType: String,
@@ -222,8 +247,17 @@ const ServiceSchema = new mongoose.Schema(
     
     // Event specific fields
     eventType: String,
-    maxAttendees: Number,
-    venue: String,
+    venueType: String,
+    maxCapacity: Number,
+    minCapacity: Number,
+    maxAttendees: Number, // Legacy field for backward compatibility
+    venue: String, // Legacy field for backward compatibility
+    priceType: String,
+    eventDuration: Number,
+    eventDate: String,
+    startTime: String,
+    endTime: String,
+    services: String,
     
     // Train specific fields
     trainType: String,

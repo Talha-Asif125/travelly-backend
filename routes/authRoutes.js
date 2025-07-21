@@ -1,43 +1,44 @@
 const express = require("express");
-const router = express.Router();
 const {
   registerUser,
+  verifyEmail,
+  resendVerificationEmail,
   loginUser,
   logoutUser,
-  resetPasswordRequest,
+  forgotPasswordRequest,
   resetPassword,
   checkEmailExists,
   checkMobileExists,
   getCurrentUser,
-  // Backward compatibility
-  resetpasswordrequest,
-  resetpassword,
+  resetPasswordRequest, // For backward compatibility
+  resetpasswordrequest, // For backward compatibility
+  resetpassword, // For backward compatibility
 } = require("../controllers/authController");
+const { protect } = require("../middleware/verifyToken");
 
-const { authenticate } = require("../middleware/auth");
-const { 
-  authLimiter, 
-  passwordResetLimiter, 
-  registrationLimiter 
-} = require("../middleware/rateLimiter");
+const router = express.Router();
 
-// Public routes with rate limiting
-router.post("/register", registrationLimiter, registerUser);
-router.post("/login", authLimiter, loginUser);
+// Public routes
+router.post("/register", registerUser);
+router.get("/verify-email/:token", verifyEmail);
+router.post("/resend-verification", resendVerificationEmail);
+router.post("/login", loginUser);
+router.post("/logout", logoutUser);
+
+// Password reset routes
+router.post("/forgot-password", forgotPasswordRequest);
+router.post("/reset-password", resetPassword);
+
+// Backward compatibility routes
+router.post("/reset-password-request", forgotPasswordRequest);
+router.post("/resetpasswordrequest", forgotPasswordRequest);
+router.post("/resetpassword", resetPassword);
+
+// Validation routes
 router.get("/check-email", checkEmailExists);
 router.get("/check-mobile", checkMobileExists);
 
-// Password reset routes with strict rate limiting
-router.post("/reset-password-request", passwordResetLimiter, resetPasswordRequest);
-router.post("/reset-password", passwordResetLimiter, resetPassword);
-
-// Backward compatibility routes (deprecated) with rate limiting
-router.post("/forgot-password", passwordResetLimiter, resetpasswordrequest);
-router.post("/reset-password-old", passwordResetLimiter, resetpassword);
-
 // Protected routes
-router.use(authenticate); // All routes below require authentication
-router.post("/logout", logoutUser);
-router.get("/me", getCurrentUser);
+router.get("/me", protect, getCurrentUser);
 
 module.exports = router;

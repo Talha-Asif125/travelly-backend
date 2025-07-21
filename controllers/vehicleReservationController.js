@@ -28,7 +28,7 @@ exports.addReservation = async (req, res) => {
     }
 
     if(req.body.needDriver){
-      amount = amount + numberOfDays * 2500;   //static driver fee
+      amount = amount + numberOfDays * 700000;   //static driver fee (PKR)
     }
 
     const newReservation = new Reservation({

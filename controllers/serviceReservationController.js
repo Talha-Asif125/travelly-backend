@@ -15,6 +15,8 @@ const createReservation = async (req, res) => {
       customerName,
       customerEmail,
       customerPhone,
+      cnicNumber,
+      cnicPhoto,
       rooms,
       roomType,
       groupSize,
@@ -24,10 +26,10 @@ const createReservation = async (req, res) => {
     } = req.body;
 
     // Validate required fields
-    if (!serviceId || !checkInDate || !checkOutDate || !customerName || !customerEmail || !customerPhone) {
+    if (!serviceId || !checkInDate || !checkOutDate || !customerName || !customerEmail || !customerPhone || !cnicNumber || !cnicPhoto) {
       return res.status(400).json({
         success: false,
-        message: "Missing required fields"
+        message: "Missing required fields: service ID, check-in/out dates, customer name, email, phone, CNIC number, and CNIC photo are required"
       });
     }
 
@@ -44,8 +46,7 @@ const createReservation = async (req, res) => {
     const checkIn = new Date(checkInDate);
     const checkOut = new Date(checkOutDate);
     const days = Math.ceil((checkOut - checkIn) / (1000 * 60 * 60 * 24));
-    const units = rooms || guests || 1;
-    const totalAmount = service.price * days * units;
+    const totalAmount = service.price * days;
 
     // Create reservation
     const reservation = new ServiceReservation({
@@ -54,10 +55,12 @@ const createReservation = async (req, res) => {
       providerId: service.providerId._id,
       checkInDate,
       checkOutDate,
-      guests,
+      guests: guests || 1,
       customerName,
       customerEmail,
       customerPhone,
+      cnicNumber,
+      cnicPhoto,
       rooms,
       roomType,
       groupSize,
@@ -76,8 +79,9 @@ const createReservation = async (req, res) => {
       { path: 'providerId', select: 'name businessName businessEmail businessPhone' }
     ]);
 
-    // Send notification to provider about new booking
+    // Send notification to BOTH provider AND admin
     try {
+      // Notification to provider
       await createNotificationHelper(
         service.providerId._id,
         'New Service Booking',
@@ -91,8 +95,26 @@ const createReservation = async (req, res) => {
           totalAmount
         }
       );
+
+      // Notification to admin
+      const adminUsers = await User.find({ role: 'admin' });
+      for (const admin of adminUsers) {
+        await createNotificationHelper(
+          admin._id,
+          'New Service Booking (Admin)',
+          `New booking for ${service.name} by ${customerName}. Provider: ${service.providerId.name}. Amount: Rs. ${totalAmount.toLocaleString()}`,
+          'new_service_booking',
+          {
+            reservationId: savedReservation._id,
+            serviceName: service.name,
+            customerName,
+            providerId: service.providerId._id,
+            totalAmount
+          }
+        );
+      }
     } catch (notifError) {
-      console.error('Error sending notification to provider:', notifError);
+      console.error('Error sending notifications:', notifError);
     }
 
     res.status(201).json({
@@ -129,6 +151,7 @@ const getProviderReservations = async (req, res) => {
       const serviceReservations = await ServiceReservation.find(filter)
         .populate('serviceId', 'name type location')
         .populate('customerId', 'name email')
+        .select('serviceId customerId checkInDate checkOutDate customerName customerEmail customerPhone cnicNumber cnicPhoto totalAmount status createdAt specialRequests')
         .sort({ createdAt: -1 });
 
       allReservations = allReservations.concat(serviceReservations);
@@ -412,102 +435,77 @@ const updateReservationStatus = async (req, res) => {
 // Get customer reservations
 const getCustomerReservations = async (req, res) => {
   try {
-    // BYPASS AUTHENTICATION - Return dummy booking data for quick access
-    console.log('🚀 BYPASS: Returning dummy bookings data');
+    const customerId = req.user.id;
+    const { type, status } = req.query;
     
-    const dummyBookings = [
-      {
-        _id: '507f1f77bcf86cd799439011',
+    let allReservations = [];
+
+    // Get service reservations
+    const serviceFilter = { customerId };
+    if (status) {
+      serviceFilter.status = status;
+    }
+    if (type && type !== 'all') {
+      serviceFilter['serviceId.type'] = type;
+    }
+
+    const serviceReservations = await ServiceReservation.find(serviceFilter)
+      .populate('serviceId', 'name type location images')
+      .populate('customerId', 'name email')
+      .sort({ createdAt: -1 })
+      .lean();
+
+    allReservations = [...serviceReservations];
+
+    // Get tour reservations if type is 'tour' or 'all'
+    if (!type || type === 'tour') {
+      const TourReservation = require('../models/tourBook');
+      const tourReservations = await TourReservation.find({ 
+        customerId: customerId.toString() 
+      }).sort({ createdAt: -1 });
+
+      // Format tour reservations to match service structure
+      const formattedTourReservations = tourReservations.map(tour => ({
+        ...tour.toObject(),
         serviceId: {
-          _id: '507f1f77bcf86cd799439012',
-          name: 'Grand Hotel Islamabad',
-          type: 'hotel',
-          location: 'Islamabad, Pakistan'
-        },
-        customerId: '507f1f77bcf86cd799439011',
-        status: 'confirmed',
-        checkInDate: '2024-01-20',
-        checkOutDate: '2024-01-22',
-        guests: 2,
-        rooms: 1,
-        totalAmount: 15000,
-        customerName: 'John Doe',
-        customerEmail: 'john@example.com',
-        customerPhone: '+92 300 1234567',
-        confirmationNumber: 'TRAV123456',
-        createdAt: '2024-01-15T10:00:00Z',
-        specialRequests: 'Late checkout preferred'
-      },
-      {
-        _id: '507f1f77bcf86cd799439013',
-        serviceId: {
-          _id: '507f1f77bcf86cd799439014',
-          name: 'Toyota Corolla 2022',
-          type: 'vehicle',
-          location: 'Lahore, Pakistan'
-        },
-        customerId: '507f1f77bcf86cd799439011',
-        status: 'pending',
-        checkInDate: '2024-01-25',
-        checkOutDate: '2024-01-27',
-        guests: 4,
-        totalAmount: 8000,
-        customerName: 'John Doe',
-        customerEmail: 'john@example.com',
-        customerPhone: '+92 300 1234567',
-        isLegacyVehicle: true,
-        needDriver: true,
-        vehicleNumber: 'LEA-1234',
-        createdAt: '2024-01-16T14:30:00Z'
-      },
-      {
-        _id: '507f1f77bcf86cd799439015',
-        serviceId: {
-          _id: '507f1f77bcf86cd799439016',
-          name: 'Northern Areas Adventure Tour',
           type: 'tour',
-          location: 'Hunza Valley, Pakistan'
+          name: tour.tourName,
+          location: tour.location
         },
-        customerId: '507f1f77bcf86cd799439011',
-        status: 'confirmed',
-        checkInDate: '2024-02-10',
-        checkOutDate: '2024-02-17',
-        guests: 3,
-        totalAmount: 95000,
-        customerName: 'John Doe',
-        customerEmail: 'john@example.com',
-        customerPhone: '+92 300 1234567',
-        isTourReservation: true,
-        confirmationNumber: 'TOUR789012',
-        createdAt: '2024-01-10T09:15:00Z',
-        specialRequests: 'Vegetarian meals please'
-      },
-      {
-        _id: '507f1f77bcf86cd799439017',
+        isTourReservation: true
+      }));
+
+      allReservations = [...allReservations, ...formattedTourReservations];
+    }
+
+    // Get vehicle reservations if type is 'vehicle' or 'all'
+    if (!type || type === 'vehicle') {
+      const VehicleReservation = require('../models/vehicleReservation');
+      const vehicleReservations = await VehicleReservation.find({
+        userId: customerId.toString()
+      }).sort({ createdAt: -1 });
+
+      // Format vehicle reservations to match service structure
+      const formattedVehicleReservations = vehicleReservations.map(vehicle => ({
+        ...vehicle.toObject(),
         serviceId: {
-          _id: '507f1f77bcf86cd799439018',
-          name: 'Silk Restaurant',
-          type: 'restaurant',
-          location: 'Karachi, Pakistan'
+          type: 'vehicle',
+          name: vehicle.vehicleName,
+          location: vehicle.location
         },
-        customerId: '507f1f77bcf86cd799439011',
-        status: 'cancelled',
-        checkInDate: '2024-01-18',
-        checkOutDate: '2024-01-18',
-        guests: 6,
-        totalAmount: 12000,
-        customerName: 'John Doe',
-        customerEmail: 'john@example.com',
-        customerPhone: '+92 300 1234567',
-        createdAt: '2024-01-12T16:45:00Z',
-        specialRequests: 'Birthday celebration setup'
-      }
-    ];
+        isLegacyVehicle: true
+      }));
+
+      allReservations = [...allReservations, ...formattedVehicleReservations];
+    }
+
+    // Sort all reservations by creation date
+    allReservations.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
 
     res.status(200).json({
       success: true,
-      count: dummyBookings.length,
-      data: dummyBookings
+      count: allReservations.length,
+      data: allReservations
     });
 
   } catch (error) {
@@ -562,10 +560,77 @@ const getReservationDetails = async (req, res) => {
   }
 };
 
+// Delete reservation (customer only)
+const deleteReservation = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const customerId = req.user.id;
+
+    // Find reservation and verify ownership
+    const reservation = await ServiceReservation.findOne({ 
+      _id: id, 
+      customerId 
+    }).populate('serviceId', 'name type');
+
+    if (!reservation) {
+      return res.status(404).json({
+        success: false,
+        message: "Reservation not found or you don't have permission to delete it"
+      });
+    }
+
+    // Only allow deletion of cancelled, completed, or past reservations
+    const now = new Date();
+    const canDelete = reservation.status === 'cancelled' || 
+                     reservation.status === 'completed' || 
+                     new Date(reservation.checkOutDate) < now;
+
+    if (!canDelete) {
+      return res.status(400).json({
+        success: false,
+        message: "You can only delete cancelled, completed, or past reservations"
+      });
+    }
+
+    await ServiceReservation.findByIdAndDelete(id);
+
+    // Send notification about deletion
+    try {
+      await createNotificationHelper(
+        customerId,
+        'Booking Deleted',
+        `Your booking for ${reservation.serviceId.name} has been permanently deleted from your booking history.`,
+        'booking_deleted',
+        {
+          reservationId: id,
+          serviceName: reservation.serviceId.name,
+          deletedAt: new Date()
+        }
+      );
+    } catch (notifError) {
+      console.error('Error sending deletion notification:', notifError);
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "Reservation deleted successfully"
+    });
+
+  } catch (error) {
+    console.error("Error deleting reservation:", error);
+    res.status(500).json({
+      success: false,
+      message: "Internal server error",
+      error: error.message
+    });
+  }
+};
+
 module.exports = {
   createReservation,
   getProviderReservations,
   updateReservationStatus,
   getCustomerReservations,
-  getReservationDetails
+  getReservationDetails,
+  deleteReservation
 }; 

@@ -160,6 +160,10 @@ const ReservationRoute = require("./routes/reservationRoute.js");
 app.use("/api/activities", ActivityRoute);
 app.use("/api/activity-reservations", ReservationRoute);
 
+// Event Management Routes
+const eventRoutes = require("./routes/eventRoutes");
+app.use("/api/events", eventRoutes);
+
 // Migration and unified transport routes
 const migrationRoutes = require("./routes/migrationRoutes");
 app.use("/api/migration", migrationRoutes);
@@ -248,3 +252,4 @@ process.on('unhandledRejection', (err, promise) => {
     process.exit(1);
   });
 });
+
