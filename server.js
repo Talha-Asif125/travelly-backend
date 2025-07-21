@@ -53,7 +53,7 @@ const corsOrigins = process.env.NODE_ENV === 'production'
       'https://travelly-axw0h4hzf-talha-asif125s-projects.vercel.app' // <-- your preview frontend
     ]
   : [
-      'http://localhost:3000',
+      
       'https://travelly-six.vercel.app',
       'https://travelly-axw0h4hzf-talha-asif125s-projects.vercel.app'
     ];
