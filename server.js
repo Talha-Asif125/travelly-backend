@@ -48,7 +48,7 @@ app.use(xss());
 // Configure CORS to accept requests from frontend
 const corsOrigins = process.env.NODE_ENV === 'production' 
   ? ['https://travelly-six.vercel.app'] 
-  : ['http://localhost:3000', 'http://127.0.0.1:3000'];
+  : ['https://travelly-six.vercel.app'];
 
 app.use(cors({
   origin: corsOrigins,

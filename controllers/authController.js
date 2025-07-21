@@ -136,7 +136,7 @@ const registerUser = catchAsync(async (req, res, next) => {
   // Send verification email
   try {
     const transporter = createEmailTransporter();
-    const verificationLink = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/verify-email?token=${emailVerificationToken}`;
+    const verificationLink = `${process.env.FRONTEND_URL || 'https://travelly-six.vercel.app'}/verify-email?token=${emailVerificationToken}`;
 
     await transporter.sendMail({
       from: process.env.EMAIL_USER || 'noreply@travely.com',
@@ -285,7 +285,7 @@ const resendVerificationEmail = catchAsync(async (req, res, next) => {
   // Send verification email
   try {
     const transporter = createEmailTransporter();
-    const verificationLink = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/verify-email?token=${emailVerificationToken}`;
+    const verificationLink = `${process.env.FRONTEND_URL || 'https://travelly-six.vercel.app'}/verify-email?token=${emailVerificationToken}`;
 
     await transporter.sendMail({
       from: process.env.EMAIL_USER || 'noreply@travely.com',
@@ -458,7 +458,7 @@ const forgotPasswordRequest = catchAsync(async (req, res, next) => {
   await user.save();
 
   // Create reset link
-  const resetLink = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/reset-password?token=${resetToken}`;
+  const resetLink = `${process.env.FRONTEND_URL || 'https://travelly-six.vercel.app'}/reset-password?token=${resetToken}`;
 
   // Send reset email
   try {
