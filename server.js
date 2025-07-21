@@ -48,9 +48,15 @@ app.use(xss());
 // Configure CORS to accept requests from frontend
 // Explicitly allow Vercel frontend in production
 const corsOrigins = process.env.NODE_ENV === 'production'
-  ? ['https://travelly-axw0h4hzf-talha-asif125s-projects.vercel.app']
-  : ['http://localhost:3000', 'https://travelly-six.vercel.app', 'https://travelly-axw0h4hzf-talha-asif125s-projects.vercel.app'];
-
+  ? [
+      'https://travelly-six.vercel.app', // <-- your main production frontend
+      'https://travelly-axw0h4hzf-talha-asif125s-projects.vercel.app' // <-- your preview frontend
+    ]
+  : [
+      'http://localhost:3000',
+      'https://travelly-six.vercel.app',
+      'https://travelly-axw0h4hzf-talha-asif125s-projects.vercel.app'
+    ];
 app.use(cors({
   origin: corsOrigins,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
